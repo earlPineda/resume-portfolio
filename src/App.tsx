@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import {
   Download,
   FileText,
@@ -22,6 +22,8 @@ import {
 import { RESUME_DATA } from './data/resumeData';
 import { downloadResumePdf } from './utils/generateResumePdf';
 import { ConstellationBackground } from './components/ConstellationBackground';
+import { AnimatedPortrait } from './components/AnimatedPortrait';
+import { HeroAnimatedText } from './components/HeroAnimatedText';
 import { SkillsSection } from './components/SkillsSection';
 import { ProjectSection } from './components/ProjectSection';
 import { CredentialsSection } from './components/CredentialsSection';
@@ -29,51 +31,6 @@ import { ContactSection } from './components/ContactSection';
 import { ResumePreviewModal } from './components/ResumePreviewModal';
 
 type WorkspaceMode = 'prototype' | 'document';
-
-// Animated tech-stack chips that float beside the hero portrait (HTML / CSS / JS / Python / PHP)
-const HERO_TECH_BADGES: {
-  label: string;
-  position: string;
-  tone: string;
-  delay: number;
-  duration: number;
-}[] = [
-  {
-    label: 'HTML',
-    position: 'top-3 -left-4 sm:top-4 sm:-left-5',
-    tone: 'border-orange-400/50 bg-[#1A1108] text-orange-300',
-    delay: 0,
-    duration: 2.6,
-  },
-  {
-    label: 'CSS',
-    position: 'bottom-9 -left-6 sm:bottom-10 sm:-left-7',
-    tone: 'border-sky-400/50 bg-[#08151F] text-sky-300',
-    delay: 0.55,
-    duration: 3,
-  },
-  {
-    label: 'JS',
-    position: '-bottom-1.5 left-1/2 -translate-x-1/2',
-    tone: 'border-cyan-400/50 bg-[#08131C] text-cyan-300',
-    delay: 1.1,
-    duration: 2.8,
-  },
-  {
-    label: 'PY',
-    position: 'top-3 -right-4 sm:top-4 sm:-right-5',
-    tone: 'border-amber-400/50 bg-[#141812] text-amber-300',
-    delay: 0.8,
-    duration: 3.2,
-  },
-  {
-    label: 'PHP',
-    position: 'bottom-9 -right-6 sm:bottom-10 sm:-right-7',
-    tone: 'border-indigo-400/50 bg-[#121829] text-indigo-300',
-    delay: 0.3,
-    duration: 2.4,
-  },
-];
 
 export default function App() {
   // Default to the signature dark cyan-obsidian theme shown in the reference screenshot
@@ -101,7 +58,6 @@ export default function App() {
   const [isDownloading, setIsDownloading] = useState<boolean>(false);
   const [previewModalOpen, setPreviewModalOpen] = useState<boolean>(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
-  const reduceMotion = useReducedMotion();
 
   // Load saved custom avatar from server if present
   useEffect(() => {
@@ -403,95 +359,28 @@ export default function App() {
         >
           <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
             <div className="flex flex-col items-center text-center">
-              {/* Circular Portrait with Orbiting Tech Nodes (Top Center like Reference Screenshot) */}
-              <motion.div
-                initial={{ opacity: 0, scale: 0.92 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-                onDragOver={(e) => {
-                  e.preventDefault();
+              {/* Animated portrait with circulating language badges */}
+              <AnimatedPortrait
+                avatarUrl={avatarUrl}
+                avatarFallback={avatarFallback}
+                isDraggingPhoto={isDraggingPhoto}
+                isDark={isDark}
+                onAvatarError={() => setAvatarFallback(true)}
+                onDragOver={(event) => {
+                  event.preventDefault();
                   setIsDraggingPhoto(true);
                 }}
                 onDragLeave={() => setIsDraggingPhoto(false)}
                 onDrop={handlePhotoDrop}
-                className="relative mb-7 flex flex-col items-center"
+              />
+
+              {/* Subtle Photo Upload Trigger right below portrait */}
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.35, delay: 0.02 }}
+                className="mt-4 flex items-center gap-2"
               >
-                {/* Glowing Cyan Backdrop Halo */}
-                <div
-                  aria-hidden="true"
-                  className="absolute -inset-3 rounded-full bg-gradient-to-tr from-cyan-500/25 via-teal-400/15 to-emerald-400/25 blur-xl"
-                />
-
-                {/* Portrait Circle */}
-                <div
-                  className={`relative h-36 w-36 sm:h-44 sm:w-44 rounded-full p-1 transition-transform ${
-                    isDraggingPhoto
-                      ? 'scale-105 ring-4 ring-cyan-400'
-                      : 'bg-gradient-to-b from-cyan-400/70 via-teal-400/30 to-slate-800'
-                  }`}
-                >
-                  <div className="h-full w-full rounded-full overflow-hidden bg-[#F4F5F7]">
-                    {!avatarFallback ? (
-                      <img
-                        src={avatarUrl}
-                        alt={RESUME_DATA.fullName}
-                        referrerPolicy="no-referrer"
-                        onError={() => setAvatarFallback(true)}
-                        className="h-full w-full object-cover object-top"
-                      />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center bg-slate-900 text-cyan-400 font-display text-3xl font-bold">
-                        EP
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Animated Tech Stack Badges Floating Beside the Portrait (HTML / CSS / JS / Python / PHP) */}
-                  {HERO_TECH_BADGES.map((badge) => (
-                    <span
-                      key={badge.label}
-                      aria-hidden="true"
-                      className={`absolute ${badge.position}`}
-                    >
-                      <motion.span
-                        initial={{ opacity: 0, scale: 0.4 }}
-                        animate={{
-                          opacity: 1,
-                          scale: 1,
-                          y: reduceMotion ? 0 : [0, -7, 0],
-                          rotate: reduceMotion ? 0 : [-4, 4, -4],
-                        }}
-                        transition={{
-                          opacity: { duration: 0.35, delay: badge.delay },
-                          scale: {
-                            type: 'spring',
-                            stiffness: 300,
-                            damping: 18,
-                            delay: badge.delay,
-                          },
-                          y: {
-                            duration: badge.duration,
-                            repeat: Infinity,
-                            ease: 'easeInOut',
-                            delay: badge.delay,
-                          },
-                          rotate: {
-                            duration: badge.duration,
-                            repeat: Infinity,
-                            ease: 'easeInOut',
-                            delay: badge.delay,
-                          },
-                        }}
-                        className={`flex h-7 min-w-7 items-center justify-center rounded-full border px-1.5 font-mono text-[9px] font-bold shadow-md ${badge.tone}`}
-                      >
-                        {badge.label}
-                      </motion.span>
-                    </span>
-                  ))}
-                </div>
-
-                {/* Subtle Photo Upload Trigger right below portrait */}
-                <div className="mt-4 flex items-center gap-2">
                   <label
                     className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-medium cursor-pointer transition-colors ${
                       isDark
@@ -515,14 +404,16 @@ export default function App() {
                       <span>Saved</span>
                     </span>
                   )}
-                </div>
-              </motion.div>
+                </motion.div>
 
               {/* Availability Status Banner (Exact match to screenshot) */}
               <motion.div
                 initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.35, delay: 0.05 }}
+                animate={{ opacity: 1, y: [0, -3, 0] }}
+                transition={{
+                  opacity: { duration: 0.35, delay: 0.05 },
+                  y: { duration: 4.2, repeat: Infinity, ease: 'easeInOut', delay: 0.4 },
+                }}
                 className={`w-full max-w-md rounded-full border px-5 py-2.5 flex items-center justify-center gap-3 ${
                   isDark
                     ? 'border-cyan-500/30 bg-[#061D25]/85 text-cyan-300 shadow-[0_0_25px_rgba(34,211,238,0.08)]'
@@ -533,63 +424,87 @@ export default function App() {
                   <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-cyan-400 opacity-75" />
                   <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-cyan-400 shadow-[0_0_8px_#22d3ee]" />
                 </span>
-                <span className="text-xs sm:text-sm font-medium tracking-wide">
-                  Available for freelance &amp; full-time opportunities
-                </span>
+                <HeroAnimatedText
+                  as="span"
+                  text="Available for freelance and full-time opportunities"
+                  baseDelay={0.1}
+                  wordStagger={0.028}
+                  floatDelay={0.3}
+                  className="text-xs sm:text-sm font-medium tracking-wide"
+                />
               </motion.div>
 
               {/* "Hi, I'm" Greeting */}
-              <motion.p
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.35, delay: 0.1 }}
+              <HeroAnimatedText
+                text="Hi, I'm"
+                baseDelay={0.12}
+                wordStagger={0.06}
+                floatDelay={0.2}
                 className={`mt-7 text-base sm:text-lg font-medium ${
                   isDark ? 'text-slate-400' : 'text-slate-600'
                 }`}
-              >
-                Hi, I&apos;m
-              </motion.p>
+              />
 
               {/* Massive Glowing Cyan-to-Emerald Stacked Name (Exact style from screenshot) */}
               <motion.h1
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: 0.14 }}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: [0, -2, 0] }}
+                transition={{
+                  opacity: { duration: 0.4, delay: 0.14 },
+                  y: { duration: 5.5, repeat: Infinity, ease: 'easeInOut', delay: 0.7 },
+                }}
                 className="mt-2 font-display text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight leading-[1.06]"
               >
-                <span className="block bg-gradient-to-b from-cyan-300 via-cyan-400 to-teal-300 bg-clip-text text-transparent">
-                  Earl Kevin
-                </span>
-                <span className="block bg-gradient-to-r from-cyan-400 via-teal-300 to-emerald-400 bg-clip-text text-transparent">
-                  E. Pineda
-                </span>
+                <HeroAnimatedText
+                  as="span"
+                  text="Earl Kevin"
+                  baseDelay={0.16}
+                  wordMotion="fade"
+                  floatAmplitude={0}
+                  className="block bg-gradient-to-b from-cyan-300 via-cyan-400 to-teal-300 bg-clip-text text-transparent"
+                />
+                <HeroAnimatedText
+                  as="span"
+                  text="E. Pineda"
+                  baseDelay={0.28}
+                  wordMotion="fade"
+                  floatAmplitude={0}
+                  className="block bg-gradient-to-r from-cyan-400 via-teal-300 to-emerald-400 bg-clip-text text-transparent"
+                />
               </motion.h1>
 
               {/* Spaced Role Subtitle (`WEB & MOBILE APP DEV`) */}
-              <motion.p
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.35, delay: 0.18 }}
+              <HeroAnimatedText
+                text="WEB & MOBILE APP DEV"
+                baseDelay={0.2}
+                wordStagger={0.045}
+                floatDelay={0.5}
                 className={`mt-4 text-xs sm:text-sm font-bold uppercase tracking-[0.28em] ${
                   isDark ? 'text-slate-400' : 'text-slate-600'
                 }`}
-              >
-                WEB &amp; MOBILE APP DEV
-              </motion.p>
+              />
 
               {/* Centered Bio Paragraph matching Screenshot */}
               <motion.p
                 initial={{ opacity: 0, y: 14 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.38, delay: 0.22 }}
+                animate={{ opacity: 1, y: [0, -3, 0] }}
+                transition={{
+                  opacity: { duration: 0.38, delay: 0.22 },
+                  y: { duration: 4.6, repeat: Infinity, ease: 'easeInOut', delay: 0.8 },
+                }}
                 className={`mt-6 max-w-xl text-sm sm:text-base leading-relaxed ${
                   isDark ? 'text-slate-400' : 'text-slate-600'
                 }`}
               >
                 A BSIT Web &amp; Mobile Application Developer specializing in{' '}
-                <span className={isDark ? 'text-slate-200 font-medium' : 'text-slate-900 font-medium'}>
-                  HTML, CSS, JavaScript, PHP, Python, and MySQL
-                </span>
+                <HeroAnimatedText
+                  as="span"
+                  text="HTML, CSS, JavaScript, PHP, Python, and MySQL"
+                  baseDelay={0.34}
+                  wordStagger={0.028}
+                  floatDelay={0.45}
+                  className={isDark ? 'text-slate-200 font-medium' : 'text-slate-900 font-medium'}
+                />
                 . Experienced in designing AI-powered mobile applications and user-friendly interfaces.
               </motion.p>
 
