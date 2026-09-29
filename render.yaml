@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: earl-pineda-resume-portfolio
+    runtime: node
+    plan: free
+    buildCommand: npm install --legacy-peer-deps && npm run build && npm run build:server
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
