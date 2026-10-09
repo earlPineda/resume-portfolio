@@ -150,6 +150,13 @@ async function startServer() {
     process.env.NODE_ENV === 'production' ||
     (process.env.RENDER === 'true' && fs.existsSync(distPath));
 
+  if (isProduction && !fs.existsSync(path.join(distPath, 'index.html'))) {
+    console.error(
+      '[startup] WARNING: dist/index.html is missing — the frontend build did not run. ' +
+        'Set the Render Build Command to "npm install --legacy-peer-deps && npm run build && npm run build:server" so that dist/ is created.'
+    );
+  }
+
   if (!isProduction) {
     const vite = await createViteServer({
       server: { middlewareMode: true },
